@@ -1,0 +1,489 @@
+--Listing 10-1. A Query with Multiple Queries in a CTE
+USE AdventureWorks;
+GO
+
+WITH
+Emp AS(
+    SELECT e.EmployeeID, e.ManagerID,e.Title AS EmpTitle,
+    c.FirstName + ISNULL(' ' + c.MiddleName,'') + ' ' + c.LastName AS
+    EmpName
+    FROM HumanResources.Employee AS e
+    INNER JOIN Person.Contact AS c
+    ON e.ContactID = c.ContactID
+    ),
+Mgr AS(
+    SELECT e.EmployeeID AS ManagerID,e.Title AS MgrTitle,
+    c.FirstName + ISNULL(' ' + c.MiddleName,'') + ' ' + c.LastName AS
+    MgrName
+    FROM HumanResources.Employee AS e
+    INNER JOIN Person.Contact AS c
+    ON e.ContactID = c.ContactID
+)
+SELECT EmployeeID, Emp.ManagerID, EmpName, EmpTitle, MgrName, MgrTitle
+FROM Emp INNER JOIN Mgr ON Emp.ManagerID = Mgr.ManagerID
+ORDER BY EmployeeID;
+
+
+--Listing 10-2. Calling a CTE Multiple Times Within a Statement
+USE AdventureWorks;
+GO
+
+--1
+WITH
+Employees AS(
+    SELECT e.EmployeeID, e.ManagerID,e.Title,
+    c.FirstName + ISNULL(' ' + c.MiddleName,'') + ' ' + c.LastName AS
+    EmpName
+    FROM HumanResources.Employee AS e
+    INNER JOIN Person.Contact AS c
+    ON e.ContactID = c.ContactID
+)
+SELECT emp.EmployeeID, emp.ManagerID, emp.EmpName, emp.Title AS EmpTitle,
+    mgr.EmpName as MgrName, mgr.Title as MgrTitle
+FROM Employees AS Emp INNER JOIN Employees AS Mgr
+    ON Emp.ManagerID = Mgr.EmployeeID;
+
+--2
+WITH Employees AS (
+    SELECT e.EmployeeID, e.ManagerID,e.Title,
+    c.FirstName + ISNULL(' ' + c.MiddleName,'') + ' ' + c.LastName AS
+    EmpName
+    FROM HumanResources.Employee AS e
+    INNER JOIN Person.Contact AS c
+    ON e.ContactID = c.ContactID)
+SELECT EmployeeID, ManagerID, EmpName, Title
+FROM Employees
+WHERE EmployeeID IN (SELECT EmployeeID
+    FROM Employees AS e
+    INNER JOIN Sales.SalesOrderHeader AS soh ON e.EmployeeID =
+        soh.SalesPersonID
+    WHERE soh.TotalDue > 10000);
+
+--Listin 10-3 Joining a CTE to another cte
+USE tempdb;
+GO
+
+--1
+IF OBJECT_ID('dbo.JobHistory') IS NOT NULL BEGIN
+    DROP TABLE dbo.JobHistory;
+END;
+
+--2
+CREATE TABLE JobHistory(
+    EmployeeID INT NOT NULL,
+    EffDate DATE NOT NULL,
+    EffSeq INT NOT NULL,
+    EmploymentStatus CHAR(1) NOT NULL,
+    JobTitle VARCHAR(50) NOT NULL,
+    Salary MONEY NOT NULL,
+    ActionDesc VARCHAR(20)
+    CONSTRAINT PK_JobHistory PRIMARY KEY CLUSTERED
+    (
+        EmployeeID, EffDate, EffSeq
+    ));
+GO
+
+--3
+INSERT INTO JobHistory(EmployeeID, EffDate, EffSeq, EmploymentStatus,
+    JobTitle, Salary, ActionDesc)
+VALUES
+    (1000,'07-31-2008',1,'A','Intern',2000,'New Hire'),
+    (1000,'05-31-2009',1,'A','Production Technician',2000,'Title Change'),
+    (1000,'05-31-2009',2,'A','Production Technician',2500,'Salary Change'),
+    (1000,'11-01-2009',1,'A','Production Technician',3000,'Salary Change'),
+    (1200,'01-10-2009',1,'A','Design Engineer',5000,'New Hire'),
+    (1200,'05-01-2009',1,'T','Design Engineer',5000,'Termination'),
+    (1100,'08-01-2008',1,'A','Accounts Payable Specialist I',2500,'New Hire'),
+    (1100,'05-01-2009',1,'A','Accounts Payable Specialist II',2500,'Title
+        Change'),
+    (1100,'05-01-2009',2,'A','Accounts Payable Specialist II',3000,'Salary
+    Change');
+
+--4
+DECLARE @Date DATE = '05-02-2009';
+
+--5
+WITH EffectiveDate AS (
+    SELECT MAX(EffDate) AS MaxDate, EmployeeID
+    FROM JobHistory
+    WHERE EffDate <= @Date
+    GROUP BY EmployeeID
+),
+EffectiveSeq AS (
+    SELECT MAX(EffSeq) AS MaxSeq, j.EmployeeID, MaxDate
+    FROM JobHistory AS j
+    INNER JOIN EffectiveDate AS d
+        ON j.EffDate = d.MaxDate AND j.EmployeeID = d.EmployeeID
+    GROUP BY j.EmployeeID, MaxDate)
+SELECT j.EmployeeID, EmploymentStatus, JobTitle, Salary
+FROM JobHistory AS j
+INNER JOIN EffectiveSeq AS e ON j.EmployeeID = e.EmployeeID
+    AND j.EffDate = e.MaxDate AND j.EffSeq = e.MaxSeq;
+
+
+
+--Listing 10-4. Writing a Query with the Alternate CTE Syntax
+USE AdventureWorks;
+GO
+WITH Emp (EmployeeID, ManagerID, JobTitle,EmpName) AS
+    (SELECT e.EmployeeID, e.ManagerID,e.Title,
+    c.FirstName + ISNULL(' ' + c.MiddleName,'') + ' ' + c.LastName
+    FROM HumanResources.Employee AS e
+    INNER JOIN Person.Contact AS c
+    ON e.ContactID = c.ContactID)
+SELECT Emp.EmployeeID, ManagerID, JobTitle, EmpName
+FROM Emp;
+
+
+--Listing 10-5. A Recursive CTE
+USE AdventureWorks;
+GO
+WITH OrgChart (EmployeeID, ManagerID, Title, Level,Node)
+AS (SELECT EmployeeID, ManagerID, Title, 0,
+        CONVERT(VARCHAR(30),'/') AS Node
+    FROM HumanResources.Employee
+    WHERE ManagerID IS NULL
+    UNION ALL
+    SELECT a.EmployeeID, a.ManagerID,a.Title, b.Level + 1,
+        CONVERT(VARCHAR(30),b.Node +
+        CONVERT(VARCHAR,a.ManagerID) + '/')
+    FROM HumanResources.Employee AS a
+    INNER JOIN OrgChart AS b ON a.ManagerID = b.EmployeeID
+)
+SELECT EmployeeID, ManagerID, SPACE(Level * 3) + Title AS Title, Level, Node
+FROM OrgChart
+ORDER BY Node;
+
+
+--Listing 10-6. Viewing the Manipulated Data with OUTPUT
+USE AdventureWorks2008;
+GO
+--1
+IF OBJECT_ID('dbo.Customers') IS NOT NULL BEGIN
+    DROP TABLE dbo.Customers;
+END;
+
+--2
+CREATE TABLE dbo.Customers (CustomerID INT NOT NULL PRIMARY KEY,
+    Name VARCHAR(150),PersonID INT NOT NULL)
+GO
+
+--3
+INSERT INTO dbo.Customers(CustomerID,Name,PersonID)
+OUTPUT inserted.CustomerID,inserted.Name
+SELECT c.CustomerID, p.FirstName + ' ' + p.LastName,PersonID
+FROM Sales.Customer AS c
+INNER JOIN Person.Person AS p
+    ON c.PersonID = p.BusinessEntityID;
+--4
+UPDATE c SET Name = p.FirstName +
+    ISNULL(' ' + p.MiddleName,'') + ' ' + p.LastName
+OUTPUT deleted.CustomerID,deleted.Name AS OldName, inserted.Name AS NewName
+FROM dbo.Customers AS c
+INNER JOIN Person.Person AS p on c.PersonID = p.BusinessEntityID;
+
+--5
+DELETE FROM dbo.Customers
+OUTPUT deleted.CustomerID, deleted.Name, deleted.PersonID
+WHERE CustomerID = 11000;
+
+
+--Listing 10-7. Saving the Results of OUTPUT
+USE AdventureWorks2008;
+GO
+
+--1
+IF OBJECT_ID('dbo.Customers') IS NOT NULL BEGIN
+    DROP TABLE dbo.Customers;
+END;
+IF OBJECT_ID('dbo.CustomerHistory') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerHistory;
+END;
+
+--2
+CREATE TABLE dbo.Customers (CustomerID INT NOT NULL PRIMARY KEY,
+    Name VARCHAR(150),PersonID INT NOT NULL)
+CREATE TABLE dbo.CustomerHistory(CustomerID INT NOT NULL PRIMARY KEY,
+    OldName VARCHAR(150), NewName VARCHAR(150),
+    ChangeDate DATETIME)
+GO
+
+--3
+INSERT INTO dbo.Customers(CustomerID, Name, PersonID)
+SELECT c.CustomerID, p.FirstName + ' ' + p.LastName,PersonID
+FROM Sales.Customer AS c
+INNER JOIN Person.Person AS p
+    ON c.PersonID = p.BusinessEntityID;
+
+--4
+UPDATE c SET Name = p.FirstName +
+    ISNULL(' ' + p.MiddleName,'') + ' ' + p.LastName
+OUTPUT deleted.CustomerID,deleted.Name, inserted.Name, GETDATE()
+INTO dbo.CustomerHistory
+FROM dbo.Customers AS c
+INNER JOIN Person.Person AS p on c.PersonID = p.BusinessEntityID;
+
+--5
+SELECT CustomerID, OldName, NewName,ChangeDate
+FROM dbo.CustomerHistory;
+
+
+--Listing 10-8. Using the MERGE Statement
+USE AdventureWorks2008;
+GO
+
+--1
+IF OBJECT_ID('dbo.CustomerSource') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerSource;
+END;
+IF OBJECT_ID('dbo.CustomerTarget') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerTarget;
+END;
+
+--2
+CREATE TABLE dbo.CustomerSource (CustomerID INT NOT NULL PRIMARY KEY,
+    Name VARCHAR(150), PersonID INT NOT NULL);
+CREATE TABLE dbo.CustomerTarget (CustomerID INT NOT NULL PRIMARY KEY,
+    Name VARCHAR(150), PersonID INT NOT NULL);
+GO
+
+--3
+INSERT INTO dbo.CustomerSource(CustomerID,Name,PersonID)
+SELECT CustomerID,
+    p.FirstName + ISNULL(' ' + p.MiddleName,'') + ' ' + p.LastName,
+    PersonID
+FROM Sales.Customer AS c
+INNER JOIN Person.Person AS p ON c.PersonID = p.BusinessEntityID
+WHERE c.CustomerID IN (29485,29486,29487,10299);
+
+--4
+INSERT INTO dbo.CustomerTarget(CustomerID,Name,PersonID)
+SELECT CustomerID, p.FirstName + ' ' + p.LastName, PersonID
+FROM Sales.Customer AS c
+INNER JOIN Person.Person AS p ON c.PersonID = p.BusinessEntityID
+WHERE c.CustomerID IN (29485,29486,21139);
+
+--5
+SELECT CustomerID, Name, PersonID
+FROM dbo.CustomerSource
+ORDER BY CustomerID;
+
+--6
+SELECT CustomerID, Name, PersonID
+FROM dbo.CustomerTarget
+ORDER BY CustomerID;
+
+--7
+MERGE dbo.CustomerTarget AS t
+USING dbo.CustomerSource AS s
+ON (s.CustomerID = t.CustomerID)
+WHEN MATCHED AND s.Name <> t.Name
+    THEN UPDATE SET Name = s.Name
+WHEN NOT MATCHED BY TARGET
+    THEN INSERT (CustomerID, Name, PersonID) VALUES (CustomerID, Name, PersonID)
+WHEN NOT MATCHED BY SOURCE
+    THEN DELETE
+OUTPUT $action, DELETED.*, INSERTED.*;--semi-colon is required
+
+--8
+SELECT CustomerID, Name, PersonID
+FROM dbo.CustomerTarget
+ORDER BY CustomerID;
+
+
+
+--Listing 10-9. Using GROUPING SETS
+USE AdventureWorks2008;
+GO
+
+--1
+SELECT NULL AS SalesOrderID,SUM(UnitPrice)AS SumOfPrice,ProductID
+FROM Sales.SalesOrderDetail
+WHERE SalesOrderID BETWEEN 44175 AND 44180
+GROUP BY ProductID
+UNION
+SELECT SalesOrderID,SUM(UnitPrice), NULL
+FROM Sales.SalesOrderDetail
+WHERE SalesOrderID BETWEEN 44175 AND 44180
+GROUP BY SalesOrderID;
+
+--2
+SELECT SalesOrderID,SUM(UnitPrice) AS SumOfPrice,ProductID
+FROM Sales.SalesOrderDetail
+WHERE SalesOrderID BETWEEN 44175 AND 44180
+GROUP BY GROUPING SETS(SalesOrderID,ProductID);
+
+
+
+--Listing 10-10. Using CASE to Pivot Data
+USE AdventureWorks2008;
+GO
+SELECT YEAR(OrderDate) AS OrderYear,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 1 THEN TotalDue ELSE 0 END),0) 
+    AS Jan,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 2 THEN TotalDue ELSE 0 END),0) 
+    AS Feb,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 3 THEN TotalDue ELSE 0 END),0) 
+    AS Mar,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 4 THEN TotalDue ELSE 0 END),0) 
+    AS Apr,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 5 THEN TotalDue ELSE 0 END),0) 
+    AS May,
+ROUND(SUM(CASE MONTH(OrderDate) WHEN 6 THEN TotalDue ELSE 0 END),0) 
+    AS Jun 
+FROM Sales.SalesOrderHeader
+GROUP BY YEAR(OrderDate)
+ORDER BY OrderYear;
+
+
+
+--Listing 10-11. Pivoting Results with PIVOT
+USE AdventureWorks2008;
+GO
+--1
+SELECT OrderYear, [1] AS Jan, [2] AS Feb, [3] AS Mar,
+    [4] AS Apr, [5] AS May, [6] AS Jun
+FROM (SELECT YEAR(OrderDate) AS OrderYear, TotalDue,
+    MONTH(OrderDate) AS OrderMonth
+    FROM Sales.SalesOrderHeader) AS MonthData
+PIVOT (
+    SUM(TotalDue)
+    FOR OrderMonth IN ([1],[2],[3],[4],[5],[6])
+) AS PivotData
+ORDER BY OrderYear;
+
+--2
+SELECT OrderYear, ROUND(ISNULL([1],0),0) AS Jan,
+    ROUND(ISNULL([2],0),0) AS Feb, ROUND(ISNULL([3],0),0) AS Mar,
+    ROUND(ISNULL([4],0),0) AS Apr, ROUND(ISNULL([5],0),0) AS May,
+    ROUND(ISNULL([6],0),0) AS Jun
+FROM (SELECT YEAR(OrderDate) AS OrderYear, TotalDue,
+    MONTH(OrderDate) AS OrderMonth
+FROM Sales.SalesOrderHeader) AS MonthData
+PIVOT (
+    SUM(TotalDue)
+    FOR OrderMonth IN ([1],[2],[3],[4],[5],[6])
+) AS PivotData
+ORDER BY OrderYear;
+
+
+
+--Listing 10-12. Limiting Results with TOP
+USE AdventureWorks2008;
+GO
+--1
+IF OBJECT_ID('dbo.Sales') IS NOT NULL BEGIN
+    DROP TABLE dbo.Sales;
+END;
+
+--2
+CREATE TABLE dbo.Sales (CustomerID INT, OrderDate DATE,
+    SalesOrderID INT NOT NULL PRIMARY KEY);
+GO
+
+--3
+INSERT TOP(5) INTO dbo.Sales(CustomerID,OrderDate,SalesOrderID)
+SELECT CustomerID, OrderDate, SalesOrderID
+FROM Sales.SalesOrderHeader;
+
+--4
+SELECT CustomerID, OrderDate, SalesOrderID
+FROM dbo.Sales
+ORDER BY SalesOrderID;
+
+--5
+DELETE TOP(2) dbo.Sales
+
+--6
+UPDATE TOP(2) dbo.Sales SET CustomerID = CustomerID + 10000;
+
+--7
+SELECT CustomerID, OrderDate, SalesOrderID
+FROM dbo.Sales
+ORDER BY SalesOrderID;
+
+--8
+DECLARE @Rows INT = 2;
+SELECT TOP(@Rows) CustomerID, OrderDate, SalesOrderID
+FROM dbo.Sales
+ORDER BY SalesOrderID;
+
+
+
+--Listing 10-13. Using ROW_NUMBER
+USE AdventureWorks2008;
+GO
+--1
+SELECT CustomerID, FirstName + ' ' + LastName AS Name,
+    ROW_NUMBER() OVER (ORDER BY LastName, FirstName) AS Row
+FROM Sales.Customer AS c INNER JOIN Person.Person AS p
+ON c.PersonID = p.BusinessEntityID;
+
+--2
+WITH customers AS (
+    SELECT CustomerID, FirstName + ' ' + LastName AS Name,
+        ROW_NUMBER() OVER (ORDER BY LastName, FirstName) AS Row
+    FROM Sales.Customer AS c INNER JOIN Person.Person AS p
+    ON c.PersonID = p.BusinessEntityID
+)
+SELECT CustomerID, Name, Row
+FROM customers
+WHERE Row > 50
+ORDER BY Row;
+
+--3
+SELECT CustomerID, FirstName + ' ' + LastName AS Name, c.TerritoryID,
+    ROW_NUMBER() OVER (PARTITION BY c.TerritoryID
+ORDER BY LastName, FirstName) AS Row
+FROM Sales.Customer AS c INNER JOIN Person.Person AS p
+    ON c.PersonID = p.BusinessEntityID;
+
+
+
+--Listing 10-14. Using RANK and DENSE_RANK
+USE AdventureWorks2008;
+GO
+SELECT CustomerID,COUNT(*) AS CountOfSales,
+    RANK() OVER(ORDER BY COUNT(*) DESC) AS Ranking,
+    ROW_NUMBER() OVER(ORDER BY COUNT(*) DESC) AS Row,
+    DENSE_RANK() OVER(ORDER BY COUNT(*) DESC) AS DenseRanking
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID
+ORDER BY COUNT(*) DESC;
+
+
+
+--Listing 10-15. Using NTILE
+USE AdventureWorks2008;
+GO
+SELECT SalesPersonID,SUM(TotalDue) AS TotalSales,
+    NTILE(10) OVER(ORDER BY SUM(TotalDue)) * 10000/COUNT(*) OVER() AS Bonus
+FROM Sales.SalesOrderHeader
+WHERE SalesPersonID IS NOT NULL
+    AND OrderDate BETWEEN '1/1/2004' AND '12/31/2004'
+GROUP BY SalesPersonID
+ORDER BY TotalSales;
+
+
+--Listin 10-16 Clean up
+--USE AdventureWorks2008;
+GO
+IF OBJECT_ID('dbo.Customers') IS NOT NULL BEGIN
+    DROP TABLE dbo.Customers;
+END;
+IF OBJECT_ID('dbo.CustomerHistory') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerHistory;
+END;
+IF OBJECT_ID('dbo.CustomerSource') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerSource;
+END;
+IF OBJECT_ID('dbo.CustomerTarget') IS NOT NULL BEGIN
+    DROP TABLE dbo.CustomerTarget;
+END;
+IF OBJECT_ID('dbo.Sales') IS NOT NULL BEGIN
+    DROP TABLE dbo.Sales;
+END;
+
+
+
+

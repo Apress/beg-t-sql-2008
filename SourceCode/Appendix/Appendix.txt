@@ -1,0 +1,1463 @@
+--Chapter 2
+
+--Solutions to Exercise 2-1
+--1
+SELECT CustomerID, LastName, FirstName, CompanyName
+FROM SalesLT.Customer;
+
+--2
+SELECT Name, ProductNumber, Color
+FROM SalesLT.Product;
+
+--3
+SELECT CustomerID, SalesOrderID
+FROM SalesLT.SalesOrderHeader;
+
+
+--Solutions to Exercise 2-2: Filtering Data
+--1
+SELECT BusinessEntityID, JobTitle, LoginID
+FROM HumanResources.Employee
+WHERE JobTitle = 'Research and Development Engineer';
+
+--2
+SELECT FirstName, MiddleName, LastName, BusinessEntityID
+FROM Person.Person
+WHERE MiddleName = 'J';
+
+--3
+SELECT [ProductID]
+,[StartDate]
+,[EndDate]
+,[StandardCost]
+,[ModifiedDate]
+FROM [AdventureWorks2008].[Production].[ProductCostHistory]
+WHERE ModifiedDate = '2003-06-17';
+GO
+
+--4
+
+SELECT BusinessEntityID, JobTitle, LoginID
+FROM HumanResources.Employee
+WHERE JobTitle <> 'Research and Development Engineer';
+
+--5
+SELECT BusinessEntityID, FirstName, MiddleName, LastName, ModifiedDate
+FROM Person.Person
+WHERE ModifiedDate > '2000-12-29';
+
+--6
+SELECT BusinessEntityID, FirstName, MiddleName, LastName, ModifiedDate
+FROM Person.Person
+WHERE ModifiedDate <> '2000-12-29';
+
+--7
+SELECT BusinessEntityID, FirstName, MiddleName, LastName, ModifiedDate
+FROM Person.Person
+WHERE ModifiedDate BETWEEN '2000-12-01' AND '2000-12-31';
+
+--8
+SELECT BusinessEntityID, FirstName, MiddleName, LastName, ModifiedDate
+FROM Person.Person
+WHERE ModifiedDate NOT BETWEEN '2000-12-01' AND '2000-12-31';
+
+--Solutions to Exercise 2-3
+--1
+SELECT ProductID, Name
+FROM Production.Product
+WHERE Name LIKE 'Chain%';
+
+--2
+SELECT ProductID, Name
+FROM Production.Product
+WHERE Name LIKE '%helmet%';
+
+--3
+SELECT ProductID, Name
+FROM Production.Product
+WHERE Name NOT LIKE '%helmet%';
+
+--4
+SELECT BusinessEntityID, FirstName, MiddleName, LastName
+FROM Person.Person
+WHERE MiddleName LIKE '[E,B]';
+
+--5
+SELECT FirstName
+FROM Person.Person
+WHERE LastName LIKE 'Ja%es';
+
+SELECT FirstName
+FROM Person.Person
+WHERE LastName LIKE 'Ja_es';
+
+
+--Solutions to Exercise 2-4: Filtering with Multiple
+--Predicates
+--1
+SELECT SalesOrderID, OrderDate, TotalDue
+FROM Sales.SalesOrderHeader
+WHERE OrderDate BETWEEN '2001-09-01' AND '2001-09-30'
+AND TotalDue > 1000;
+
+--2
+SELECT SalesOrderID, OrderDate, TotalDue
+FROM Sales.SalesOrderHeader
+WHERE OrderDate BETWEEN '2001-09-01' AND '2001-09-03'
+AND TotalDue > 1000;
+SELECT SalesOrderID, OrderDate, TotalDue
+FROM Sales.SalesOrderHeader
+WHERE OrderDate IN ('2001-09-01', '2001-09-02', '2001-09-03')
+    AND TotalDue > 1000;
+SELECT SalesOrderID, OrderDate, TotalDue
+FROM Sales.SalesOrderHeader
+WHERE (OrderDate >= '2001-09-01' AND OrderDate <= '2001-09-03')
+    AND TotalDue > 1000;
+
+--3
+SELECT SalesOrderID, OrderDate, TotalDue, SalesPersonID, TerritoryID
+FROM Sales.SalesOrderHeader
+WHERE TotalDue > 1000 AND (SalesPersonID = 279 OR TerritoryID = 6);
+
+--4
+SELECT SalesOrderID, OrderDate, TotalDue, SalesPersonID, TerritoryID
+FROM Sales.SalesOrderHeader
+WHERE TotalDue > 1000 AND (SalesPersonID = 279 OR TerritoryID IN (6,4));
+
+
+--Solutions to Exercise 2-5: Working with Nothing
+--1
+SELECT ProductID, Name, Color
+FROM Production.Product
+WHERE Color IS NULL;
+
+--2
+SELECT ProductID, Name, Color
+FROM Production.Product
+WHERE Color IS NULL OR Color <> 'Blue';
+
+SELECT ProductID, Name, Color
+FROM Production.Product
+WHERE ISNULL(Color,'') <> 'Blue';
+
+--3
+SELECT ProductID, Name, Style, Size, Color
+FROM Production.Product
+WHERE Style IS NOT NULL OR Size IS NOT NULL OR Color IS NOT NULL;
+
+--Solutions to Exercise 2-6: Performing a Full-Text
+--1
+SELECT Comments,ProductID
+FROM Production.ProductReview
+WHERE CONTAINS(Comments,'socks');
+
+--2
+SELECT Title,FileName
+FROM Production.Document
+WHERE CONTAINS(*,'reflector');
+
+--3
+SELECT Title, FileName
+FROM Production.Document
+WHERE CONTAINS(*,'reflector AND NOT seat')
+
+
+--Solutions to Exercise 2-7: Sorting Data
+
+--1
+SELECT BusinessEntityID, LastName, FirstName, MiddleName
+FROM Person.Person
+ORDER BY LastName, FirstName, MiddleName;
+
+--2
+SELECT BusinessEntityID, LastName, FirstName, MiddleName
+FROM Person.Person
+ORDER BY LastName DESC, FirstName DESC, MiddleName DESC;
+
+--Solutions to Exercise 2-8: Thinking About
+--Performance
+USE AdventureWorks2008;
+GO
+--1
+SELECT LastName
+FROM Person.Person
+WHERE LastName = 'Smith';
+--2
+SELECT LastName
+FROM Person.Person
+WHERE LastName LIKE 'Sm%';
+--3
+SELECT LastName
+FROM Person.Person
+WHERE LastName LIKE '%mith';
+--4
+SELECT ModifiedDate
+FROM Person.Person
+WHERE ModifiedDate BETWEEN '2000-01-01' and '2000-01-31';
+
+--Chapter 3: Using Functions and Expressions
+
+--Solutions to Exercise 3-1: Writing Expressions Using
+--Operators
+
+--1
+SELECT AddressLine1 + ' (' + City + ' ' + PostalCode + ')'
+FROM Person.Address;
+
+--2
+SELECT ProductID, ISNULL(Color,'No Color') AS Color, Name
+FROM Production.Product;
+
+--3
+SELECT ProductID, Name + ISNULL(': ' + Color,'') AS Description
+FROM Production.Product;
+
+--4
+SELECT CAST(ProductID AS VARCHAR) + ': ' + Name AS IDName
+FROM Production.Product;
+
+SELECT CONVERT(VARCHAR, ProductID) + ': ' + Name AS IDName
+FROM Production.Product;
+
+
+--Solutions to Exercise 3-2: Using Mathematical
+--Operators
+
+--1
+SELECT SpecialOfferID, Description, MaxQty - MinQty AS Diff
+FROM Sales.SpecialOffer;
+
+--2
+SELECT SpecialOfferID, Description, MinQty * DiscountPct AS Discount
+FROM Sales.SpecialOffer;
+
+--3
+SELECT SpecialOfferID, Description, ISNULL(MaxQty,10) * DiscountPct AS
+    Discount
+FROM Sales.SpecialOffer;
+
+--Solutions to Exercise 3-3: Using String Functions
+
+--1
+SELECT LEFT(AddressLine1,10) AS Address10
+FROM Person.Address;
+SELECT SUBSTRING(AddressLine1,1,10) AS Address10
+FROM Person.Address;
+
+--2
+SELECT SUBSTRING(AddressLine1,10,6) AS Address10to15
+FROM Person.Address;
+
+--3
+SELECT UPPER(FirstName) AS FirstName, UPPER(LastName) AS LastName
+FROM Person.Person;
+
+--4
+--Step 1
+SELECT ProductNumber, CHARINDEX('-',ProductNumber)
+FROM Production.Product;
+--Step 2
+SELECT ProductNumber,
+SUBSTRING(ProductNumber,CHARINDEX('-',ProductNumber)+1,25) AS ProdNumber
+FROM Production.Product;
+
+
+--Solutions to Exercise 3-4: Using Date Functions
+
+--1
+SELECT SalesOrderID, OrderDate, ShipDate,
+DATEDIFF(d,OrderDate,ShipDate) AS NumberOfDays
+FROM Sales.SalesOrderHeader;
+
+--2
+--Use any of the styles that return only date
+SELECT CONVERT(VARCHAR,OrderDate,1) AS OrderDate,
+CONVERT(VARCHAR, ShipDate,1) AS ShipDate
+FROM Sales.SalesOrderHeader;
+
+--3
+SELECT SalesOrderID, OrderDate, DATEADD(m,6,OrderDate) Plus6Months
+FROM Sales.SalesOrderHeader;
+
+--4
+SELECT SalesOrderID, OrderDate, YEAR(OrderDate) AS OrderYear,
+    MONTH(OrderDate) AS OrderMonth
+FROM Sales.SalesOrderHeader;
+
+SELECT SalesOrderID, OrderDate, DATEPART(yyyy,OrderDate) AS OrderYear,
+    DATEPART(m,OrderDate) AS OrderMonth
+FROM Sales.SalesOrderHeader;
+
+--5
+SELECT SalesOrderID, OrderDate, DATEPART(yyyy,OrderDate) AS OrderYear,
+DATENAME(m,OrderDate) AS OrderMonth
+FROM Sales.SalesOrderHeader;
+
+
+--Solutions to Exercise 3-5: Using Mathematical
+--Functions
+--1
+SELECT SalesOrderID, ROUND(SubTotal,2) AS SubTotal
+FROM Sales.SalesOrderHeader;
+
+--2
+SELECT SalesOrderID, ROUND(SubTotal,0) AS SubTotal
+FROM Sales.SalesOrderHeader;
+
+--3
+Sales.SalesOrderHeader table.
+SELECT SQRT(SalesOrderID) AS OrderSQRTFROM Sales.SalesOrderHeader;
+
+--4
+SELECT CAST(RAND() * 10 AS INT) + 1;
+
+
+--Solutions to Exercise 3-6: Using System Functions
+
+--1
+SELECT BusinessEntityID,
+    CASE BusinessEntityID % 2 WHEN 0 THEN 'Even' ELSE 'Odd' END
+FROM HumanResources.Employee;
+
+--2
+SELECT SalesOrderID, OrderQty,
+    CASE WHEN OrderQty BETWEEN 0 AND 9 THEN 'Under 10'
+    WHEN OrderQty BETWEEN 10 AND 19 THEN '10-19'
+    WHEN OrderQty BETWEEN 20 AND 29 THEN '20-29'
+    WHEN OrderQty BETWEEN 30 AND 39 THEN '30-39'
+    ELSE '40 and over' end AS range
+FROM Sales.SalesOrderDetail;
+
+--3
+SELECT COALESCE(Title + ' ','') + FirstName +
+    COALESCE(' ' + MiddleName,'') + ' ' + LastName +
+    COALESCE(', ' + Suffix,'')
+FROM Person.Person;
+
+--4
+SELECT SERVERPROPERTY('Edition'),
+    SERVERPROPERTY('InstanceName'),
+     SERVERPROPERTY('MachineName');
+
+
+--Solutions to Exercise 3-7: Using Functions in the
+--WHERE and ORDER BY Clauses
+
+--1
+SELECT SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader
+WHERE YEAR(OrderDate) = 2001;
+
+--2
+SELECT SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader
+ORDER BY MONTH(OrderDate), YEAR(OrderDate);
+
+--3
+SELECT PersonType, FirstName, MiddleName, LastName
+FROM Person.Person
+ORDER BY CASE WHEN PersonType IN ('IN','SP','SC') THEN LastName
+    ELSE FirstName END;
+
+--Solutions to Exercise 3-8: Thinking About
+--Performance
+USE AdventureWorks2008;
+GO
+--1
+SELECT Name
+FROM Production.Product
+WHERE Name LIKE 'B%';
+--2
+SELECT Name
+FROM Production.Product
+WHERE CHARINDEX('B',Name) = 1;
+
+--2
+USE AdventureWorks2008;
+GO
+--1
+SELECT LastName
+FROM Person.Person
+WHERE LastName LIKE '%i%';
+--2
+SELECT LastName
+FROM Person.Person
+WHERE CHARINDEX('i',LastName) > 0;
+
+--Chapter 4: Querying Multiple Tables
+
+--Solutions to Exercise 4-1: Writing Inner Joins
+--1
+SELECT JobTitle, BirthDate, FirstName, LastName
+FROM HumanResources.Employee AS E
+INNER JOIN Person.Person AS P ON E.BusinessEntityID = P.BusinessEntityID;
+
+--2
+SELECT CustomerID, StoreID, TerritoryID, FirstName, MiddleName, LastName
+FROM Sales.Customer AS C
+INNER JOIN Person.Person AS P ON C.PersonID = P.BusinessEntityID;
+
+--3
+SELECT c.CustomerID, StoreID, c.TerritoryID, FirstName, MiddleName,
+    LastName,SalesOrderID
+FROM Sales.Customer AS C
+INNER JOIN Person.Person AS P ON C.PersonID = P.BusinessEntityID
+INNER JOIN Sales.SalesOrderHeader AS S ON S.CustomerID = C.CustomerID;
+
+--4
+SELECT SalesOrderID, SalesQuota, Bonus
+FROM Sales.SalesOrderHeader AS S
+INNER JOIN Sales.SalesPerson AS SP 
+    ON S.SalesPersonID =SP.BusinessEntityID;
+
+--5
+SELECT SalesOrderID, SalesQuota, Bonus, FirstName, MiddleName, LastName
+FROM Sales.SalesOrderHeader AS S
+INNER JOIN Sales.SalesPerson AS SP ON S.SalesPersonID = SP.BusinessEntityID
+INNER JOIN Person.Person AS P ON SP.BusinessEntityID = P.BusinessEntityID;
+
+SELECT SalesOrderID, SalesQuota, Bonus, FirstName, MiddleName, LastName
+FROM Sales.SalesOrderHeader AS S
+INNER JOIN Sales.SalesPerson AS SP ON S.SalesPersonID = SP.BusinessEntityID
+INNER JOIN Person.Person AS P ON S.SalesPersonID = P.BusinessEntityID;
+
+--6
+SELECT PM.CatalogDescription, Color, Size
+FROM Production.Product AS P
+INNER JOIN Production.ProductModel AS PM 
+    ON P.ProductModelID = PM.ProductModelID;
+
+--7
+SELECT FirstName, MiddleName, LastName, Prod.Name
+FROM Sales.Customer AS C
+INNER JOIN Person.Person AS P ON C.PersonID = P.BusinessEntityID
+INNER JOIN Sales.SalesOrderHeader AS SOH ON C.CustomerID = SOH.CustomerID
+INNER JOIN Sales.SalesOrderDetail AS SOD 
+    ON SOH.SalesOrderID = SOD.SalesOrderID
+INNER JOIN Production.Product AS Prod ON SOD.ProductID = Prod.ProductID;
+
+
+--Solutions to Exercise 4-2: Writing Outer Joins
+--1
+SELECT SalesOrderID, P.ProductID, P.Name
+FROM Production.Product AS P
+LEFT OUTER JOIN Sales.SalesOrderDetail AS SOD ON P.ProductID =
+SOD.ProductID;
+
+--2
+SELECT SalesOrderID, P.ProductID, P.Name
+FROM Production.Product AS P
+LEFT OUTER JOIN Sales.SalesOrderDetail AS SOD ON P.ProductID =
+SOD.ProductID
+WHERE SalesOrderID IS NULL;
+
+--3
+SELECT SalesOrderID, SalesPersonID, SalesYTD
+FROM Sales.SalesPerson AS SP
+LEFT OUTER JOIN Sales.SalesOrderHeader AS SOH
+ON SP.BusinessEntityID = SOH.SalesPersonID;
+
+--4
+SELECT SalesOrderID, SalesPersonID, SalesYTD, FirstName, MiddleName,
+    LastName
+FROM Sales.SalesPerson AS SP
+LEFT OUTER JOIN Sales.SalesOrderHeader AS SOH
+   ON SP.BusinessEntityID = SOH.SalesPersonID
+LEFT OUTER JOIN Person.Person AS P 
+   ON P.BusinessEntityID =SP.BusinessEntityID;
+
+--5
+SELECT CR.CurrencyRateID, CR.AverageRate, SM.ShipBase, SalesOrderID
+FROM Sales.SalesOrderHeader AS SOH
+LEFT OUTER JOIN Sales.CurrencyRate AS CR 
+   ON SOH.CurrencyRateID = CR.CurrencyRateID
+LEFT OUTER JOIN Purchasing.ShipMethod AS SM 
+    ON SOH.ShipMethodID = SM.ShipMethodID;
+
+--6
+SELECT SP.BusinessEntityID, P.ProductID
+FROM Sales.SalesPerson AS SP CROSS JOIN Production.Product AS P;
+
+--7
+USE AdventureWorks;
+GO
+SELECT a.EmployeeID AS Employee,
+    a.Title AS EmployeeTitle,
+    b.EmployeeID AS ManagerID,
+    b.Title AS ManagerTitle,
+    c.FirstName, c.MiddleName, c.LastName
+FROM HumanResources.Employee AS a
+LEFT OUTER JOIN HumanResources.Employee AS b
+    ON a.ManagerID = b.EmployeeID
+LEFT OUTER JOIN Person.Contact AS c ON a.EmployeeID = c.ContactID;
+
+
+--Solutions to Exercise 4-3: Writing Subqueries
+
+--1
+SELECT ProductID, Name
+FROM Production.Product
+WHERE ProductID IN (SELECT ProductID FROM Sales.SalesOrderDetail);
+
+--2
+SELECT ProductID, Name
+FROM Production.Product
+WHERE ProductID NOT IN (
+    SELECT ProductID FROM Sales.SalesOrderDetail
+    WHERE ProductID IS NOT NULL);
+
+--3
+SELECT Color
+FROM Production.ProductColor
+WHERE Color NOT IN (
+    SELECT Color FROM Production.Product WHERE Color IS NOT NULL);
+
+--4
+SELECT DISTINCT Color
+FROM Production.Product
+WHERE Color NOT IN (
+    SELECT Color FROM Production.ProductColor WHERE Color IS NOT NULL);
+
+--5
+SELECT ModifiedDate
+FROM Person.Person
+UNION
+SELECT HireDate
+FROM HumanResources.Employee;
+
+
+--Solutions to Exercise 4-4: Exploring Derived Tables
+
+--1
+SELECT SOH.SalesOrderID, SOH.OrderDate, ProductID
+FROM Sales.SalesOrderHeader AS SOH
+INNER JOIN (
+SELECT SalesOrderID, ProductID
+FROM Sales.SalesOrderDetail) AS SOD
+ON SOH.SalesOrderID = SOD.SalesOrderID;
+
+--2
+WITH SOD AS (
+    SELECT SalesOrderID, ProductID
+    FROM Sales.SalesOrderDetail
+)
+SELECT SOH.SalesOrderID, SOH.OrderDate, ProductID
+FROM Sales.SalesOrderHeader AS SOH
+INNER JOIN SOD ON SOH.SalesOrderID = SOD.SalesOrderID;
+
+--3
+WITH SOH AS (
+    SELECT SalesOrderID, OrderDate, CustomerID
+    FROM Sales.SalesOrderHeader
+    WHERE OrderDate BETWEEN '1/1/2001' AND '12/31/2001'
+)
+SELECT C.CustomerID, SalesOrderID, OrderDate
+FROM Sales.Customer AS C
+LEFT OUTER JOIN SOH ON C.CustomerID = SOH.CustomerID;
+
+
+--Solutions to Exercise 4-5: Thinking About
+--Performance
+USE AdventureWorks2008;
+GO
+ALTER TABLE Sales.SalesOrderDetail ADD OrderID INT NULL;
+GO
+UPDATE Sales.SalesOrderDetail SET OrderID = SalesOrderID;
+
+--1
+SELECT o.SalesOrderID,d.SalesOrderDetailID
+FROM Sales.SalesOrderHeader AS o
+INNER JOIN Sales.SalesOrderDetail AS d ON o.SalesOrderID =
+    d.SalesOrderID;
+--2
+SELECT o.SalesOrderID,d.SalesOrderDetailID
+FROM Sales.SalesOrderHeader AS o
+INNER JOIN Sales.SalesOrderDetail AS d ON o.SalesOrderID = d.OrderID;
+
+
+--Chapter 5: Grouping and Summarizing Data
+--1
+SELECT COUNT(*) AS CountOfCustomers
+FROM Sales.Customer;
+
+--2
+SELECT SUM(OrderQty) AS TotalProductsOrdered
+FROM Sales.SalesOrderDetail;
+
+--3
+SELECT MAX(UnitPrice) AS MostExpensivePrice
+FROM Sales.SalesOrderDetail;
+
+--4
+SELECT AVG(Freight) AS AverageFreight
+FROM Sales.SalesOrderHeader;
+
+--5
+SELECT MIN(ListPrice) AS Minimum,
+    MAX(ListPrice) AS Maximum,
+    AVG(ListPrice) AS Average
+FROM Production.Product;
+
+--Solutions to Exercise 5-2: Using the GROUP BY Clause
+--1
+SELECT SUM(OrderQty) AS TotalOrdered, ProductID
+FROM Sales.SalesOrderDetail
+GROUP BY ProductID;
+
+--2
+SELECT COUNT(*) AS CountOfOrders, SalesOrderID
+FROM Sales.SalesOrderDetail
+GROUP BY SalesOrderID;
+
+--3
+SELECT COUNT(*) AS CountOfProducts, ProductLine
+FROM Production.Product
+GROUP BY ProductLine;
+
+--4
+SELECT CustomerID, COUNT(*) AS CountOfSales, YEAR(OrderDate) AS
+OrderYear
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID, YEAR(OrderDate);
+
+
+--Solutions to Exercise 5-3: Using the HAVING Clause
+
+--1
+SELECT COUNT(*) AS CountOfDetailLines, SalesOrderID
+FROM Sales.SalesOrderDetail
+GROUP BY SalesOrderID
+HAVING COUNT(*) > 3;
+
+--2
+SELECT SUM(LineTotal) AS SumOfLineTotal, SalesOrderID
+FROM Sales.SalesOrderDetail
+GROUP BY SalesOrderID
+HAVING SUM(LineTotal) > 1000;
+
+--3
+SELECT ProductModelID, COUNT(*) AS CountOfProducts
+FROM Production.Product
+GROUP BY ProductModelID
+HAVING COUNT(*) = 1;
+
+--4
+SELECT ProductModelID, COUNT(*) AS CountOfProducts, Color
+FROM Production.Product
+WHERE Color IN ('Blue','Red')
+GROUP BY ProductModelID, Color
+HAVING COUNT(*) = 1;
+
+
+--Solutions to Exercise 5-4: Using DISTINCT
+
+--1
+SELECT COUNT(DISTINCT ProductID) AS CountOFProductID
+FROM Sales.SalesOrderDetail;
+
+--2
+SELECT COUNT(DISTINCT TerritoryID) AS CountOfTerritoryID, CustomerID
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID;
+
+
+--Solutions to Exercise 5-5: Using Aggregate Queries
+--with More Than One Table
+
+--1
+SELECT COUNT(*) AS CountOfOrders, FirstName, MiddleName, LastName
+FROM Person.Person AS P
+INNER JOIN Sales.Customer AS C ON P.BusinessEntityID = C.PersonID
+INNER JOIN Sales.SalesOrderHeader AS SOH ON C.CustomerID = SOH.CustomerID
+GROUP BY FirstName, MiddleName, LastName;
+
+--2
+SELECT SUM(OrderQty) SumOfOrderQty, P.ProductID, SOH.OrderDate
+FROM Sales.SalesOrderHeader AS SOH
+INNER JOIN Sales.SalesOrderDetail AS SOD
+    ON SOH.SalesOrderID = SOD.SalesOrderDetailID
+INNER JOIN Production.Product AS P ON SOD.ProductID = P.ProductID
+GROUP BY P.ProductID, SOH.OrderDate;
+
+
+--Solutions to Exercise 5-6: Isolating Aggregate Query
+--Logic
+
+--1
+SELECT FirstName, LastName, e.JobTitle, HireDate, CountOfTitle
+FROM HumanResources.Employee AS e
+INNER JOIN Person.Person AS p ON e.BusinessEntityID = p.BusinessEntityID
+INNER JOIN (
+    SELECT COUNT(*) AS CountOfTitle, JobTitle
+    FROM HumanResources.Employee
+    GROUP BY JobTitle) AS j ON e.JobTitle = j.JobTitle;
+
+--2
+WITH j AS (SELECT COUNT(*) AS CountOfTitle, JobTitle
+FROM HumanResources.Employee
+GROUP BY JobTitle)
+SELECT FirstName, LastName, e.JobTitle, HireDate, CountOfTitle
+FROM HumanResources.Employee AS e
+INNER JOIN Person.Person AS p ON e.BusinessEntityID = p.BusinessEntityID
+INNER JOIN j ON e.JobTitle = j.JobTitle;
+
+--3
+SELECT FirstName, LastName, e.JobTitle, HireDate,
+COUNT(*) OVER(PARTITION BY JobTitle) AS CountOfTitle
+FROM HumanResources.Employee AS e
+INNER JOIN Person.Person AS p ON e.BusinessEntityID = p.BusinessEntityID
+
+--4
+--subquery
+SELECT CustomerID, SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader
+WHERE CustomerID IN
+(SELECT CustomerID
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID
+    HAVING COUNT(*) > 4);
+
+--CTE
+WITH c AS (
+    SELECT CustomerID
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID
+    HAVING COUNT(*) > 4)
+SELECT c.CustomerID, SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader AS SOH
+INNER JOIN c ON SOH.CustomerID = c.CustomerID;
+
+--derived table
+SELECT c.CustomerID, SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader AS SOH
+INNER JOIN (
+    SELECT CustomerID
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID
+    HAVING COUNT(*) > 4) AS c ON SOH.CustomerID = c.CustomerID;
+
+
+--Solutions to Exercise 5-7: Thinking About
+--Performance
+
+
+USE AdventureWorks2008;
+GO
+--1
+WITH SumSale AS
+(
+    SELECT SUM(TotalDue) AS SumTotalDue,
+        CustomerID
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID)
+SELECT o.CustomerID, TotalDue,
+    TotalDue / SumTotalDue * 100 AS PercentOfSales
+FROM SumSale INNER JOIN Sales.SalesOrderHeader AS o
+    ON SumSale.CustomerID = o.CustomerID
+ORDER BY CustomerID;
+--2
+SELECT CustomerID, TotalDue,
+    TotalDue / SUM(TotalDue) OVER(PARTITION BY CustomerID) * 100 AS
+    PercentOfSales
+FROM Sales.SalesOrderHeader
+ORDER BY CustomerID;
+
+--2
+USE AdventureWorks2008;
+GO
+--1
+WITH SumSale AS
+(    SELECT SUM(TotalDue) AS SumTotalDue,
+        CustomerID
+     FROM Sales.SalesOrderHeader
+     GROUP BY CustomerID),
+TerrSales AS
+(
+    SELECT SUM(TotalDue) AS SumTerritoryTotalDue, TerritoryID
+    FROM Sales.SalesOrderHeader
+    GROUP BY TerritoryID )
+SELECT o.CustomerID, TotalDue,
+    TotalDue / SumTotalDue * 100 AS PercentOfCustSales,
+    TotalDue / SumTerritoryTotalDue * 100 AS PercentOfTerrSales
+FROM SumSale
+INNER JOIN Sales.SalesOrderHeader AS o ON SumSale.CustomerID =
+o.CustomerID
+INNER JOIN TerrSales ON TerrSales.TerritoryID = o.TerritoryID
+ORDER BY CustomerID;
+
+--2
+SELECT CustomerID, TotalDue,
+    TotalDue / SUM(TotalDue) OVER(PARTITION BY CustomerID) * 100 AS
+    PercentOfCustSales,
+    TotalDue / SUM(TotalDue) OVER(PARTITION BY TerritoryID) * 100 AS
+    PercentOfTerrSales
+FROM Sales.SalesOrderHeader
+ORDER BY CustomerID;
+
+
+--Chapter 6: Manipulating Data
+USE AdventureWorksLT2008;
+GO
+IF EXISTS (SELECT * FROM sys.objects
+WHERE object_id = OBJECT_ID(N'[dbo].[demoProduct]')
+AND type in (N'U'))
+    DROP TABLE [dbo].[demoProduct]
+GO
+CREATE TABLE [dbo].[demoProduct](
+    [ProductID] [INT] NOT NULL PRIMARY KEY,
+    [Name] [dbo].[Name] NOT NULL,
+    [Color] [NVARCHAR](15) NULL,
+    [StandardCost] [MONEY] NOT NULL,
+    [ListPrice] [MONEY] NOT NULL,
+    [Size] [NVARCHAR](5) NULL,
+    [Weight] [DECIMAL](8, 2) NULL,
+);
+IF EXISTS (SELECT * FROM sys.objects
+WHERE object_id = OBJECT_ID(N'[dbo].[demoSalesOrderHeader]')
+AND type in (N'U'))
+    DROP TABLE [dbo].[demoSalesOrderHeader]
+GO
+CREATE TABLE [dbo].[demoSalesOrderHeader](
+    [SalesOrderID] [INT] NOT NULL PRIMARY KEY,
+    [SalesID] [INT] NOT NULL IDENTITY,
+    [OrderDate] [DATETIME] NOT NULL,
+    [CustomerID] [INT] NOT NULL,
+    [SubTotal] [MONEY] NOT NULL,
+    [TaxAmt] [MONEY] NOT NULL,
+    [Freight] [MONEY] NOT NULL,
+    [DateEntered] [DATETIME],
+    [TotalDue] AS (ISNULL(([SubTotal]+[TaxAmt])+[Freight],(0))),
+    [RV] ROWVERSION NOT NULL);
+GO
+ALTER TABLE [dbo].[demoSalesOrderHeader] ADD CONSTRAINT
+    [DF_demoSalesOrderHeader_DateEntered]
+DEFAULT (GETDATE()) FOR [DateEntered];
+
+
+IF EXISTS (SELECT * FROM sys.objects
+WHERE object_id = OBJECT_ID(N'[dbo].[demoAddress]')
+AND type in (N'U'))
+    DROP TABLE [dbo].[demoAddress]
+GO
+CREATE TABLE [dbo].[demoAddress](
+    [AddressID] [INT] NOT NULL IDENTITY PRIMARY KEY,
+    [AddressLine1] [NVARCHAR](60) NOT NULL,
+    [AddressLine2] [NVARCHAR](60) NULL,
+    [City] [NVARCHAR](30) NOT NULL,
+    [StateProvince] [dbo].[Name] NOT NULL,
+    [CountryRegion] [dbo].[Name] NOT NULL,
+    [PostalCode] [NVARCHAR](15) NOT NULL
+);
+
+--1
+SELECT ProductID, Name, Color,
+StandardCost, ListPrice, Size, Weight
+FROM SalesLT.Product;
+
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+StandardCost, ListPrice, Size, Weight)
+VALUES (680,'HL Road Frame - Black,
+    58','Black',1059.31,1431.50,'58',1016.04);
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+    StandardCost, ListPrice, Size, Weight)
+VALUES (706,'HL Road Frame - Red, 58','Red',1059.31,
+    1431.50,'58',1016.04);
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+    StandardCost, ListPrice, Size, Weight)
+VALUES (707,'Sport-100 Helmet, Red','Red',13.0863,34.99,NULL,NULL);
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+    StandardCost, ListPrice, Size, Weight)
+VALUES (708,'Sport-100 Helmet, Black','Black',13.0863,34.99,NULL,NULL);
+
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+    StandardCost, ListPrice, Size, Weight)
+VALUES (709,'Mountain Bike Socks, M','White',3.3963,9.50,'M',NULL);
+
+--2
+INSERT INTO dbo.demoProduct(ProductID, Name, Color,
+    StandardCost, ListPrice, Size, Weight)
+VALUES (711,'Sport-100 Helmet, Blue','Blue',13.0863,34.99,NULL,NULL),
+    (712,'AWC Logo Cap','Multi',6.9223,8.99,NULL,NULL),
+    (713,'Long-Sleeve Logo Jersey,
+     S','Multi',38.4923,49.99,'S',NULL),
+    (714,'Long-Sleeve Logo Jersey,
+    M','Multi',38.4923,49.99,'M',NULL),
+    (715,'Long-Sleeve Logo Jersey,
+     L','Multi',38.4923,49.99,'L',NULL);
+
+--3
+INSERT INTO dbo.demoSalesOrderHeader(
+    SalesOrderID, OrderDate, CustomerID,
+    SubTotal, TaxAmt, Freight)
+SELECT SalesOrderID, OrderDate, CustomerID,
+    SubTotal, TaxAmt, Freight
+FROM SalesLT.SalesOrderHeader;
+
+--4
+SELECT COUNT(ISNULL(SalesOrderID,0)) AS CountOfORders, c.CustomerID,
+SUM(TotalDue) AS TotalDue
+INTO dbo.tempCustomerSales
+FROM SalesLT.Customer AS c
+LEFT JOIN SalesLT.SalesOrderHeader AS soh ON c.CustomerID =    
+soh.CustomerID
+GROUP BY c.CustomerID;
+
+--5
+
+INSERT INTO dbo.demoProduct (ProductID, Name, Color, StandardCost,
+    ListPrice, Size, Weight)
+SELECT p.ProductID, p.Name, p.Color, p.StandardCost, p.ListPrice,
+    p.Size, p.Weight
+FROM SalesLT.Product AS p
+LEFT OUTER JOIN dbo.demoProduct AS dp ON p.ProductID = dp.ProductID
+WHERE dp.ProductID IS NULL;
+INSERT INTO dbo.demoProduct (ProductID, Name, Color, StandardCost,
+    ListPrice, Size, Weight)
+SELECT ProductID, Name, Color, StandardCost, ListPrice,
+    Size, Weight
+FROM SalesLT.Product
+WHERE ProductID NOT IN (
+    SELECT ProductID FROM dbo.demoProduct WHERE ProductID IS NOT NULL);
+
+--6
+SET IDENTITY_INSERT dbo.demoAddress ON;
+INSERT INTO dbo.demoAddress(AddressID,AddressLine1,AddressLine2,
+    City,StateProvince,CountryRegion,PostalCode)
+SELECT AddressID,AddressLine1,AddressLine2,
+    City,StateProvince,CountryRegion,PostalCode
+FROM SalesLT.Address;
+
+--to turn the setting off
+SET IDENTITY_INSERT dbo.demoAddress OFF;
+
+
+--Solutions to Exercise 6-2: Deleting Rows
+--1
+
+DELETE FROM dbo.demoCustomer
+WHERE LastName LIKE 'S%'
+
+--2
+WITH Sales AS (
+    SELECT C.CustomerID
+    FROM dbo.demoCustomer AS C
+    LEFT OUTER JOIN dbo.demoSalesOrderHeader AS SOH
+        ON C.CustomerID = SOH.CustomerID
+    GROUP BY c.CustomerID
+    HAVING SUM(ISNULL(TotalDue,0)) < 1000)
+DELETE C
+FROM dbo.demoCustomer AS C
+INNER JOIN Sales ON C.CustomerID = Sales.CustomerID;
+
+DELETE FROM dbo.demoCustomer
+WHERE CustomerID IN (
+    SELECT C.CustomerID
+    FROM dbo.demoCustomer AS C
+    LEFT OUTER JOIN dbo.demoSalesOrderHeader AS SOH
+    ON C.CustomerID = SOH.CustomerID
+    GROUP BY c.CustomerID
+    HAVING SUM(ISNULL(TotalDue,0)) < 1000);
+
+--3
+DELETE P
+FROM dbo.demoProduct AS P
+LEFT OUTER JOIN dbo.demoSalesOrderDetail AS SOD 
+    ON P.ProductID = SOD.ProductID
+WHERE SOD.ProductID IS NULL;
+
+DELETE FROM dbo.demoProduct
+WHERE ProductID NOT IN
+(    SELECT ProductID
+     FROM dbo.demoSalesOrderDetail
+     WHERE ProductID IS NOT NULL);
+
+--Solutions to Exercise 6-3: Updating Existing Rows
+--1
+UPDATE dbo.demoAddress SET AddressLine2 = 'N/A'
+WHERE AddressLine2 IS NULL;
+
+--2
+UPDATE dbo.demoProduct SET ListPrice *= 1.1;
+
+--3
+UPDATE SOD
+SET UnitPrice = P.ListPrice
+FROM SalesLT.SalesOrderDetail AS SOD
+INNER JOIN dbo.demoProduct AS P ON SOD.ProductID = P.ProductID;
+
+--4
+WITH SOD AS(
+SELECT SUM(LineTotal) AS TotalSum, SalesOrderID
+FROM dbo.demoSalesOrderDetail
+GROUP BY SalesOrderID)
+UPDATE SOH Set SubTotal = TotalSum
+FROM dbo.demoSalesOrderHeader AS SOH
+INNER JOIN SOD ON SOH.SalesOrderID = SOD.SalesOrderID;
+
+
+--Solutions to Exercise 6-4: Using Transactions
+IF OBJECT_ID('dbo.Demo') IS NOT NULL BEGIN
+    DROP TABLE dbo.Demo;
+END;
+GO
+CREATE TABLE dbo.Demo(ID INT PRIMARY KEY, Name VARCHAR(25));
+
+--1
+BEGIN TRAN
+    INSERT INTO dbo.Demo(ID,Name)
+    VALUES (1,'Test1');
+    INSERT INTO dbo.Demo(ID,Name)
+    VALUES(2,'Test2');
+COMMIT TRAN;
+
+--2
+
+BEGIN TRAN
+    INSERT INTO dbo.Demo(ID,Name)
+    VALUES(3,'Test3');
+    INSERT INTO dbo.Demo(ID,Name)
+    VALUES('a','Test4');
+COMMIT TRAN;
+GO
+SELECT ID,Name
+FROM dbo.Demo;
+
+
+--Chapter 7: Understanding T-SQL
+--Programming Logic
+
+--1
+DECLARE @myInt INT = 10;
+PRINT @myInt;
+
+--2
+DECLARE @myString VARCHAR(20) = 'This is a test';
+PRINT @myString;
+
+--3
+DECLARE @MaxID INT, @MinID INT;
+SELECT @MaxID = MAX(SalesOrderID),
+    @MinID = MIN(SalesOrderID)
+FROM Sales.SalesOrderHeader;
+PRINT 'Max: ' + CONVERT(VARCHAR,@MaxID);
+PRINT 'Min: ' + CONVERT(VARCHAR, @MinID);
+
+--4
+DECLARE @ID INTEGER = 70000;
+SELECT SalesOrderID
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID > @ID;
+
+--5
+DECLARE @ID INT, @FirstName NVARCHAR(50), @LastName NVARCHAR(50);
+SELECT @ID = BusinessEntityID, @FirstName = FirstName,
+    @LastName = LastName
+FROM Person.Person
+WHERE BusinessEntityID = 1;
+PRINT CONVERT(NVARCHAR,@ID) + ': ' + @FirstName + ' ' + @LastName;
+
+--6
+DECLARE @SalesCount INT;
+
+SELECT @SalesCount = COUNT(*)
+FROM Sales.SalesOrderHeader;
+
+SELECT @SalesCount - COUNT(*) AS CustCountDiff, CustomerID
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID;
+
+
+--Solutions to Exercise 7-2: Using the IF…ELSE
+--Construct
+
+--1
+DECLARE @Count INT;
+
+SELECT @Count = COUNT(*)
+FROM Sales.SalesOrderDetail;
+IF @Count > 100000 BEGIN
+    PRINT 'Over 100,000';
+END
+ELSE BEGIN
+    PRINT '100,000 or less.';
+END;
+
+--2
+IF MONTH(GETDATE()) IN (10,11) BEGIN
+    PRINT 'The month is ' + DATENAME(mm,GETDATE());
+    IF YEAR(GETDATE()) % 2 = 0 BEGIN
+        PRINT 'The year is even.';
+    END
+    ELSE BEGIN
+        PRINT 'The year is odd.';
+    END
+END;
+
+--3
+IF EXISTS(SELECT * FROM Sales.SalesOrderHeader
+WHERE SalesOrderID = 1) BEGIN
+    PRINT 'There is a SalesOrderID = 1';
+END
+ELSE BEGIN
+    PRINT 'There is not a SalesOrderID = 1';
+END;
+
+
+--Solutions to Exercise 7-3: Using WHILE
+
+--1
+DECLARE @Letter CHAR(1);
+SET @Letter = CHAR(65);
+PRINT @Letter;
+
+DECLARE @Count INT = 65;
+WHILE @Count < 91 BEGIN
+    PRINT CHAR(@Count);
+    SET @Count += 1;
+END;
+
+--2
+DECLARE @i INTEGER = 1;
+DECLARE @j INTEGER;
+WHILE @i <= 100 BEGIN
+    SET @j = 1;
+    WHILE @j <= 5 BEGIN
+    PRINT @i * @j;
+    SET @j += 1;
+END;
+SET @i += 1;
+END;
+
+--3
+DECLARE @i INTEGER = 1;
+DECLARE @j INTEGER;
+WHILE @i <= 100 BEGIN
+    SET @j = 1;
+    WHILE @j <= 5 BEGIN
+        IF @i % 5 = 0 BEGIN
+            PRINT 'Breaking out of loop.'
+            BREAK;
+        END;
+        PRINT @i * @j;
+        SET @j += 1;
+    END;
+    SET @i += 1;
+END;
+
+--4
+DECLARE @Count INT = 1;
+WHILE @Count <= 100 BEGIN
+    IF @Count % 2 = 0 BEGIN
+        PRINT 'Even';
+    END
+    ELSE BEGIN
+        PRINT 'Odd';
+    END
+    SET @Count += 1;
+END;
+
+
+--Solutions to Exercise 7-4: Handling Errors
+
+--1
+DECLARE @Error INT;
+INSERT INTO
+HumanResources.Department(DepartmentID,Name,GroupName,ModifiedDate)
+VALUES (1,'Engineering','Research and Development',GETDATE());
+
+SET @Error = @@ERROR;
+IF @Error > 0 BEGIN
+    PRINT @Error;
+END;
+
+--2
+BEGIN TRY
+    INSERT INTO
+    HumanResources.Department(DepartmentID,Name,GroupName,ModifiedDate)
+    VALUES (1,'Engineering','Research and Development',GETDATE());
+END TRY
+BEGIN CATCH
+    SELECT ERROR_NUMBER() AS ErrorNumber,ERROR_MESSAGE() AS
+    ErrorMessage,
+    ERROR_SEVERITY() AS ErrorSeverity;
+END CATCH;
+
+--3
+BEGIN TRY
+    INSERT INTO
+    HumanResources.Department(DepartmentID,Name,GroupName,ModifiedDate)
+    VALUES (1,'Engineering','Research and Development',GETDATE());
+END TRY
+BEGIN CATCH
+    RAISERROR('You attempted to insert a duplicate!',16,1);
+END CATCH;
+
+
+--Solutions to Exercise 7-5: Creating Temporary Tables
+--and Table Variables
+
+--1
+CREATE TABLE #CustomerInfo(
+    CustomerID INT, FirstName VARCHAR(50),
+    LastName VARCHAR(50),CountOfSales INT,
+    SumOfTotalDue MONEY);
+GO
+INSERT INTO #CustomerInfo(CustomerID,FirstName,LastName,
+    CountOfSales, SumOfTotalDue)
+SELECT C.CustomerID, FirstName, LastName,COUNT(*),SUM(TotalDue)
+FROM Sales.Customer AS C
+INNER JOIN Person.Person AS P ON C.CustomerID = P.BusinessEntityID
+INNER JOIN Sales.SalesOrderHeader AS SOH 
+    ON C.CustomerID = SOH.CustomerID
+GROUP BY C.CustomerID, FirstName, LastName ;
+
+--2
+DECLARE @CustomerInfo TABLE (
+    CustomerID INT, FirstName VARCHAR(50),
+    LastName VARCHAR(50),CountOfSales INT,
+    SumOfTotalDue MONEY);
+INSERT INTO @CustomerInfo(CustomerID,FirstName,LastName,
+    CountOfSales, SumOfTotalDue)
+SELECT C.CustomerID, FirstName, LastName,COUNT(*),SUM(TotalDue)
+FROM Sales.Customer AS C
+INNER JOIN Person.Person AS P ON C.CustomerID = P.BusinessEntityID
+INNER JOIN Sales.SalesOrderHeader AS SOH 
+    ON C.CustomerID = SOH.CustomerID
+GROUP BY C.CustomerID, FirstName, LastName ;
+
+--3
+CAST(RND() * 10000 AS INT) + 1
+
+DECLARE @test TABLE (ID INTEGER NOT NULL IDENTITY, Random INT)
+DECLARE @Count INT = 1;
+DECLARE @Value INT;
+WHILE @Count <= 1000 BEGIN
+    SET @Value = CAST(RAND()*10000 AS INT) + 1;
+    INSERT INTO @test(Random)
+    VALUES(@Value);
+    SET @Count += 1;
+END;
+SET @Count = 1;
+WHILE @Count <= 1000 BEGIN
+    SELECT @Value = Random
+    FROM @test
+    WHERE ID = @Count;
+    PRINT @Value;
+    SET @Count += 1;
+END;
+
+
+--Chapter 8: Moving Logic to the Database
+
+--1
+IF OBJECT_ID ('dbo.testCustomer') IS NOT NULL BEGIN
+    DROP TABLE dbo.testCustomer;
+END;
+GO
+CREATE TABLE dbo.testCustomer (
+    CustomerID INT NOT NULL IDENTITY PRIMARY KEY,
+    FirstName VARCHAR(25), LastName VARCHAR(25),
+    Age INT, Active CHAR(1) DEFAULT 'Y',
+    CONSTRAINT ch_testCustomer_Age CHECK (Age < 120),
+    CONSTRAINT ch_testCustomer_Active CHECK (Active IN ('Y','N'))
+);
+GO
+INSERT INTO dbo.testCustomer(FirstName, LastName,Age)
+VALUES ('Kathy','Morgan',35),('Lady B.','Kellenberger',14),
+    ('Luke','Moore',30);
+
+
+--2
+IF OBJECT_ID('dbo.testOrder') IS NOT NULL BEGIN
+    DROP TABLE dbo.testOrder;
+END;
+GO
+
+CREATE TABLE dbo.testOrder (CustomerID INT NOT NULL,
+    OrderID INT NOT NULL IDENTITY PRIMARY KEY,
+    OrderDate DATETIME DEFAULT GETDATE(),
+    RW ROWVERSION,
+    CONSTRAINT fk_testOrders FOREIGN KEY (CustomerID)
+    REFERENCES dbo.testCustomer(CustomerID)
+);
+GO
+INSERT INTO dbo.testOrder (CustomerID)
+VALUES (1),(2),(3);
+
+--3
+IF OBJECT_ID('dbo.testOrderDetail') IS NOT NULL BEGIN
+    DROP TABLE dbo.testOrderDetail;
+END;
+GO
+
+CREATE TABLE dbo.testOrderDetail(
+    OrderID INT NOT NULL, ItemID INT NOT NULL,
+    Price Money NOT NULL, Qty INT NOT NULL,
+    LineItemTotal AS (Price * Qty),
+CONSTRAINT pk_testOrderDetail PRIMARY KEY (OrderID, ItemID),
+CONSTRAINT fk_testOrderDetail FOREIGN KEY (OrderID)
+REFERENCES dbo.testOrder(OrderID)
+);
+GO
+INSERT INTO dbo.testOrderDetail(OrderID,ItemID,Price,Qty)
+VALUES (1,1,10,5),(1,2,5,10);
+
+
+--Solutions to Exercise 8-2: Creating Views
+
+--1
+IF OBJECT_ID('dbo.vw_Products') IS NOT NULL BEGIN
+    DROP VIEW dbo.vw_Products;
+END;
+GO
+CREATE VIEW dbo.vw_Products AS (
+    SELECT P.ProductID, P.Name, P.Color, P.Size, P.Style,
+    H.StandardCost, H.EndDate, H.StartDate
+FROM Production.Product AS P
+INNER JOIN Production.ProductCostHistory AS H ON P.ProductID =
+    H.ProductID
+);
+GO
+
+SELECT ProductID, Name, Color, Size, Style, StandardCost,
+    EndDate, StartDate
+FROM dbo.vw_Products;
+
+
+--2
+IF OBJECT_ID('dbo.vw_CustomerTotals') IS NOT NULL BEGIN
+    DROP VIEW dbo.vw_CustomerTotals;
+END;
+GO
+CREATE VIEW dbo.vw_CustomerTotals AS (
+    SELECT C.CustomerID, YEAR(OrderDate) AS OrderYear,
+    MONTH(OrderDate) AS OrderMonth, SUM(TotalDue) AS TotalSales
+FROM Sales.Customer AS C
+INNER JOIN Sales.SalesOrderHeader AS SOH ON C.CustomerID =
+SOH.CustomerID
+GROUP BY C.CustomerID, YEAR(OrderDate), MONTH(OrderDate)
+);
+GO
+SELECT CustomerID, OrderYear, OrderMonth, TotalSales
+FROM dbo.vw_CustomerTotals;
+
+
+--Solutions to Exercise 8-3: Creating User-Defined
+--Functions
+
+--1
+IF OBJECT_ID('dbo.fn_AddTwoNumbers') IS NOT NULL BEGIN
+    DROP FUNCTION dbo.fn_AddTwoNumbers;
+END;
+GO
+CREATE FUNCTION dbo.fn_AddTwoNumbers (@NumberOne INT, @NumberTwo INT)
+RETURNS INT AS BEGIN
+    RETURN @NumberOne + @NumberTwo;
+END;
+GO
+SELECT dbo.fn_AddTwoNumbers(1,2);
+
+--2
+
+IF OBJECT_ID('dbo.Trim') IS NOT NULL BEGIN
+    DROP FUNCTION dbo.Trim;
+END
+GO
+CREATE FUNCTION dbo.Trim (@Expression VARCHAR(250))
+RETURNS VARCHAR(250) AS BEGIN
+    RETURN LTRIM(RTRIM(@Expression));
+END;
+GO
+
+SELECT '*' + dbo.Trim(' test ') + '*';
+
+
+--3
+IF OBJECT_ID('dbo.fn_RemoveNumbers') IS NOT NULL BEGIN
+    DROP FUNCTION dbo.fn_RemoveNumbers;
+END;
+GO
+CREATE FUNCTION dbo.fn_RemoveNumbers (@Expression VARCHAR(250))
+RETURNS VARCHAR(250) AS BEGIN
+    DECLARE @NewExpression VARCHAR(250) = '';
+    DECLARE @Count INT = 1;
+    DECLARE @Char CHAR(1);
+    WHILE @Count <= LEN(@Expression) BEGIN
+        SET @Char = SUBSTRING(@Expression,@Count,1);
+        IF ISNUMERIC(@Char) = 0 BEGIN
+            SET @NewExpression += @Char;
+        END
+    SET @Count += 1;
+    END;
+    RETURN @NewExpression;
+END;
+GO
+SELECT dbo.fn_RemoveNumbers('abc 123 baby you and me');
+
+--4
+IF OBJECT_ID('dbo.fn_FormatPhone') IS NOT NULL BEGIN
+    DROP FUNCTION dbo.fn_FormatPhone;
+END;
+GO
+CREATE FUNCTION dbo.fn_FormatPhone (@Phone VARCHAR(10))
+RETURNS VARCHAR(14) AS BEGIN
+    DECLARE @NewPhone VARCHAR(14);
+    SET @NewPhone = '(' + SUBSTRING(@Phone,1,3) + ') ';
+    SET @NewPhone = @NewPhone + SUBSTRING(@Phone,4,3) + '-';
+    SET @NewPhone = @NewPhone + SUBSTRING(@Phone,7,4)
+    RETURN @NewPhone;
+END;
+GO
+SELECT dbo.fn_FormatPhone('5555551234');
+
+
+--Solutions to Exercise 8-4: Creating Stored Procedures
+
+--1
+IF OBJECT_ID('dbo.usp_CustomerTotals') IS NOT NULL BEGIN
+    DROP PROCEDURE dbo.usp_CustomerTotals;
+END;
+GO
+
+CREATE PROCEDURE dbo.usp_CustomerTotals AS
+    SELECT C.CustomerID, YEAR(OrderDate) AS OrderYear,
+        MONTH(OrderDate) AS OrderMonth, SUM(TotalDue) AS TotalSales
+    FROM Sales.Customer AS C
+    INNER JOIN Sales.SalesOrderHeader AS SOH 
+    ON C.CustomerID = SOH.CustomerID
+    GROUP BY C.CustomerID, YEAR(OrderDate), MONTH(OrderDate)
+GO
+EXEC dbo.usp_CustomerTotals;
+
+--2
+IF OBJECT_ID('dbo.usp_CustomerTotals') IS NOT NULL BEGIN
+    DROP PROCEDURE dbo.usp_CustomerTotals;
+END;
+GO
+CREATE PROCEDURE dbo.usp_CustomerTotals @CustomerID INT AS
+    SELECT C.CustomerID, YEAR(OrderDate) AS OrderYear,
+    MONTH(OrderDate) AS OrderMonth, SUM(TotalDue) AS TotalSales
+FROM Sales.Customer AS C
+INNER JOIN Sales.SalesOrderHeader AS SOH 
+    ON C.CustomerID = SOH.CustomerID
+WHERE C.CustomerID = @CustomerID
+GROUP BY C.CustomerID, YEAR(OrderDate), MONTH(OrderDate)
+GO
+EXEC dbo.usp_CustomerTotals 17910;
+
+
+--3
+IF OBJECT_ID('dbo.usp_ProductSales') IS NOT NULL BEGIN
+    DROP PROCEDURE dbo.usp_ProductSales;
+END;
+GO
+
+CREATE PROCEDURE dbo.usp_ProductSales @ProductID INT,
+    @TotalSold INT = NULL OUTPUT AS
+    SELECT @TotalSold = SUM(OrderQty)
+    FROM Sales.SalesOrderDetail
+    WHERE ProductID = @ProductID;
+GO
+DECLARE @TotalSold INT;
+EXEC dbo.usp_ProductSales @ProductID = 776, @TotalSold = @TotalSold OUTPUT;
+PRINT @TotalSold;

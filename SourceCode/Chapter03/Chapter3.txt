@@ -1,0 +1,488 @@
+--Listing 3-1. Concatenating Strings
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT 'ab' + 'c';
+
+--2
+SELECT BusinessEntityID, FirstName + ' ' + LastName AS "Full Name"
+FROM Person.Person;
+
+--3
+SELECT BusinessEntityID, LastName + ', ' + FirstName AS "Full Name"
+FROM Person.Person;
+
+
+
+
+--Listing 3-2. Using ISNULL and COALLESCE
+
+USE AdventureWorks2008;
+GO
+SELECT BusinessEntityID, FirstName + ' ' + MiddleName +
+    ' ' + LastName AS "Full Name"
+FROM Person.Person;
+
+
+
+--Listing 3-3. Using ISNULL and COALESCE
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT BusinessEntityID, FirstName + ' ' + ISNULL(MiddleName,'') +
+    ' ' + LastName AS "Full Name"
+FROM Person.Person;
+
+--2
+SELECT BusinessEntityID, FirstName + ISNULL(' ' + MiddleName,'') +
+    ' ' + LastName AS "Full Name"
+FROM Person.Person;
+
+--3
+SELECT BusinessEntityID, FirstName + COALESCE(' ' + MiddleName,'') +
+    ' ' + LastName AS "Full Name"
+FROM Person.Person;
+
+
+
+
+--Listing 3-4. Using CAST and CONVERT
+
+USE AdventureWorks2008
+GO
+
+--1
+SELECT CAST(BusinessEntityID AS NVARCHAR) + ': ' + LastName
+    + ', ' + FirstName AS ID_Name
+FROM Person.Person;
+
+--2
+SELECT CONVERT(NVARCHAR(10),BusinessEntityID) + ': ' + LastName
+    + ', ' + FirstName AS ID_Name
+FROM Person.Person;
+
+--3
+SELECT BusinessEntityID, BusinessEntityID + 1 AS "Adds 1",
+    CAST(BusinessEntityID AS NVARCHAR(10)) + '1'AS "Appends 1"
+FROM Person.Person;
+
+
+
+--Listing 3-5. Using Mathematical Operators
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT 1 + 1;
+
+--2
+SELECT 10 / 3 AS DIVISION, 10 % 3 AS MODULO;
+
+--3
+SELECT OrderQty, OrderQty * 10 AS Times10
+FROM Sales.SalesOrderDetail;
+
+--4
+SELECT OrderQty * UnitPrice * (1.0 - UnitPriceDiscount)
+    AS Calculated, LineTotal
+FROM Sales.SalesOrderDetail;
+
+--5
+SELECT SpecialOfferID,MaxQty,DiscountPct,
+    DiscountPct * ISNULL(MaxQTY,1000) AS MaxDiscount
+FROM Sales.SpecialOffer;
+
+
+
+
+--Listing 3-6. Using RTRIM and LTRIM
+--Create the temp table
+CREATE TABLE #trimExample (COL1 VARCHAR(10));
+GO
+
+--Populate the table
+INSERT INTO #trimExample (COL1)
+VALUES ('a'),('b '),(' c'),(' d ');
+
+--Select the values using the functions
+SELECT COL1, '*' + RTRIM(COL1) + '*' AS "RTRIM",
+    '*' + LTRIM(COL1) + '*' AS "LTRIM"
+FROM #trimExample;
+
+--Clean up
+DROP TABLE #trimExample;
+
+
+--Listing 3-7. The LEFT and RIGHT Functions
+
+USE AdventureWorks2008;
+GO
+SELECT LastName,LEFT(LastName,5) AS "LEFT",
+    RIGHT(LastName,4) AS "RIGHT"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+
+
+--Listing 3-8.Using the LEN and DATALENGTH Functions
+
+USE AdventureWorks2008;
+GO
+SELECT LastName,LEN(LastName) AS "Length",
+    DATALENGTH(LastName) AS "Data Length"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+
+--Listing 3-9. Using CHARINDEX
+
+USE AdventureWorks2008;
+GO
+SELECT LastName, CHARINDEX('e',LastName) AS "Find e",
+    CHARINDEX('e',LastName,4) AS "Skip 4 Characters",
+    CHARINDEX('be',LastName) AS "Find be"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+
+--Listing 3-10. Using SUBSTRING
+
+USE AdventureWorks2008;
+GO
+SELECT LastName, SUBSTRING(LastName,1,4) AS "First 4",
+    SUBSTRING(LastName,5,50) AS "Characters 5 and later"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+
+--Listing 3-11. Using UPPER and LOWER
+
+USE AdventureWorks2008;
+GO
+SELECT LastName, UPPER(LastName) AS "UPPER",
+    LOWER(LastName) AS "LOWER"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+
+--Listing 3-12. Using REPLACE
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT LastName, REPLACE(LastName,'A','Z') AS "Replace A",
+    REPLACE(LastName,'A','ZZ') AS "Replace with 2 characters",
+    REPLACE(LastName,'ab','') AS "Remove string"
+FROM Person.Person
+WHERE BusinessEntityID IN (293,295,211,297,299,3057,15027);
+
+--2
+SELECT businessentityid,LastName,MiddleName,
+    REPLACE(LastName,'a',MiddleName) AS "Replace with MiddleName",
+    REPLACE(LastName,MiddleName,'a') AS "Replace MiddleName"
+FROM Person.Person
+WHERE BusinessEntityID IN (285,293,10314);
+
+
+
+
+--Listing 3-13. Nesting Functions
+
+USE AdventureWorks2008;
+GO
+
+--1
+SELECT EmailAddress,
+    SUBSTRING(EmailAddress,CHARINDEX('@',EmailAddress) + 1,50) AS DOMAIN
+FROM Production.ProductReview;
+
+--2
+SELECT [FileName] AS Path,RIGHT([FileName],
+    CHARINDEX('\',REVERSE([FileName]))- 1) AS Name
+FROM AdventureWorks.Production.Document;
+
+
+
+--Listing 3-14. Using the DATEADD Function
+
+Use AdventureWorks2008
+GO
+--1
+SELECT OrderDate, DATEADD(year,1,OrderDate) AS OneMoreYear,
+    DATEADD(month,1,OrderDate) AS OneMoreMonth,
+    DATEADD(day,-1,OrderDate) AS OneLessDay
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+--2
+SELECT DATEADD(month,1,'1/29/2009')
+
+
+
+
+--Listing 3-15. Using DATEDIFF
+
+Use AdventureWorks2008;
+GO
+--1
+SELECT OrderDate, GETDATE() CurrentDateTime,
+    DATEDIFF(year,OrderDate,GETDATE()) AS YearDiff,
+    DATEDIFF(month,OrderDate,GETDATE()) AS MonthDiff,
+    DATEDIFF(day,OrderDate,GETDATE()) AS DayDiff
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+--2
+SELECT DATEDIFF(year,'12/31/2008','1/1/2009') AS YearDiff,
+    DATEDIFF(month,'12/31/2008','1/1/2009') AS MonthDiff,
+    DATEDIFF(day,'12/31/2008','1/1/2009') AS DayDiff;
+
+
+
+
+--Listing 3-16. Using DATENAME and DATEPART
+
+Use AdventureWorks2008
+GO
+--1
+SELECT OrderDate, DATEPART(year,OrderDate) AS OrderYear,
+    DATEPART(month,OrderDate) AS OrderMonth,
+    DATEPART(day,OrderDate) AS OrderDay,
+    DATEPART(weekday,OrderDate) AS OrderWeekDay
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+--2
+SELECT OrderDate, DATENAME(year,OrderDate) AS OrderYear,
+    DATENAME(month,OrderDate) AS OrderMonth,
+    DATENAME(day,OrderDate) AS OrderDay,
+    DATENAME(weekday,OrderDate) AS OrderWeekDay
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+
+
+
+--Listing 3-17. Using the DAY, MONTH, and YEAR Functions
+
+Use AdventureWorks2008
+GO
+SELECT OrderDate, YEAR(OrderDate) AS OrderYear,
+    MONTH(OrderDate) AS OrderMonth,
+    DAY(OrderDate) AS OrderDay
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+
+
+
+--Listing 3-18. Using CONVERT to Format a Date/Time Value
+
+--1 The hard way!
+SELECT CAST(DATEPART(YYYY,GETDATE()) AS VARCHAR) + '/' +
+    CAST(DATEPART(MM,GETDATE()) AS VARCHAR) +
+    '/' + CAST(DATEPART(DD,GETDATE()) AS VARCHAR);
+
+--2 The easy way!
+SELECT CONVERT(VARCHAR,GETDATE(),111);
+
+--3
+USE AdventureWorks2008
+GO
+SELECT CONVERT(VARCHAR,OrderDate,1) AS "1",
+    CONVERT(VARCHAR,OrderDate,101) AS "101",
+    CONVERT(VARCHAR,OrderDate,2) AS "2",
+    CONVERT(VARCHAR,OrderDate,102) AS "102"
+FROM Sales.SalesOrderHeader
+WHERE SalesOrderID in (43659,43714,60621);
+
+
+
+
+--Listing 3-21. Using ROUND
+SELECT ROUND(1234.1294,2) AS "2 places on the right",
+    ROUND(1234.1294,-2) AS "2 places on the left",
+    ROUND(1234.1294,2,1) AS "Truncate 2",
+    ROUND(1234.1294,-2,1) AS "Truncate -2"
+
+
+
+
+--Listing 3-22. Using RAND
+
+SELECT CAST(RAND() * 100 AS INT) + 1 AS "1 to 100",
+    CAST(RAND()* 1000 AS INT) + 900 AS "900 to 1900",
+    CAST(RAND() * 5 AS INT)+ 1 AS "1 to 5";
+
+
+
+
+--Listing 3-23. Using Simple CASE
+
+USE AdventureWorks2008;
+GO
+SELECT Title,
+    CASE Title
+    WHEN 'Mr.' THEN 'Male'
+    WHEN 'Ms.' THEN 'Female'
+    WHEN 'Mrs.' THEN 'Female'
+    WHEN 'Miss' THEN 'Female'
+    ELSE 'Unknown' END AS Gender
+FROM Person.Person
+WHERE BusinessEntityID IN (1,5,6,357,358,11621,423);
+
+
+
+
+--Listing 3-24. Using Searched CASE
+
+SELECT Title,
+    CASE WHEN Title IN ('Ms.','Mrs.','Miss') THEN 'Female'
+    WHEN Title = 'Mr.' THEN 'Male'
+    ELSE 'Unknown' END AS Gender
+FROM Person.Person
+WHERE BusinessEntityID IN (1,5,6,357,358,11621,423);
+
+
+
+
+--Listing 3-25. Returning a Column Name in CASE
+
+USE AdventureWorks2008;
+GO
+SELECT VacationHours,SickLeaveHours,
+    CASE WHEN VacationHours > SickLeaveHours THEN VacationHours
+    ELSE SickLeaveHours END AS 'More Hours'
+FROM HumanResources.Employee;
+
+
+
+
+--Listing 3-26. Using COALESCE
+
+--USE AdventureWorks2008;
+GO
+SELECT ProductID,Size, Color,
+    COALESCE(Size, Color,'No color or size') AS 'Description'
+FROM Production.Product
+where ProductID in (1,2,317,320,680,706);
+
+
+
+
+--Listing 3-27. A Few System Functions
+
+SELECT DB_NAME() AS "Database Name",
+    HOST_NAME() AS "Host Name",
+    CURRENT_USER AS "Current User",
+    USER_NAME() AS "User Name",
+    APP_NAME() AS "App Name";
+
+
+
+
+--Listing 3-28. Using Functions in WHERE and ORDER BY
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT FirstName
+FROM Person.Person
+WHERE CHARINDEX('ke',FirstName) > 0;
+
+--2
+SELECT LastName,REVERSE(LastName)
+FROM Person.Person
+ORDER BY REVERSE(LastName);
+
+--3
+SELECT BirthDate
+FROM HumanResources.Employee
+ORDER BY YEAR(BirthDate);
+
+
+
+--Thinking about performance
+
+USE [AdventureWorks2008]
+GO
+--Add an index
+IF EXISTS (SELECT * FROM sys.indexes WHERE object_id =
+    OBJECT_ID(N'[Sales].[SalesOrderHeader]')
+    AND name = N'DEMO_SalesOrderHeader_OrderDate')
+    DROP INDEX [DEMO_SalesOrderHeader_OrderDate]
+ON [Sales].[SalesOrderHeader] WITH ( ONLINE = OFF );
+GO
+
+CREATE NONCLUSTERED INDEX [DEMO_SalesOrderHeader_OrderDate]
+    ON [Sales].[SalesOrderHeader]
+        ([OrderDate] ASC);
+
+
+
+
+
+--Listing 3-29. Compare the Performance When Using a Function in the WHERE Clause
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader
+WHERE OrderDate >= '2001-01-01 00:00:00'
+AND OrderDate <= '2002-01-01 00:00:00';
+
+--2
+SELECT SalesOrderID, OrderDate
+FROM Sales.SalesOrderHeader
+WHERE YEAR(OrderDate) = 2001;
+
+
+--Remove the index
+IF EXISTS (SELECT * FROM sys.indexes WHERE object_id =
+OBJECT_ID(N'[Sales].[SalesOrderHeader]')
+AND name = N'DEMO_SalesOrderHeader_OrderDate')
+DROP INDEX [DEMO_SalesOrderHeader_OrderDate]
+ON [Sales].[SalesOrderHeader] WITH ( ONLINE = OFF );
+
+
+
+
+--Exercise 3-8 Question 1
+
+USE AdventureWorks2008;
+GO
+--1
+SELECT Name
+FROM Production.Product
+WHERE Name LIKE 'B%';
+
+--2
+SELECT Name
+FROM Production.Product
+WHERE CHARINDEX('B',Name) = 1;
+
+
+
+
+--Exercise 3-8 Question 2
+
+--1
+SELECT LastName
+FROM Person.Person
+WHERE LastName LIKE '%i%';
+
+--2
+SELECT LastName
+FROM Person.Person
+WHERE CHARINDEX('i',LastName) > 0;
+
+
+
+
+
+
+
+
